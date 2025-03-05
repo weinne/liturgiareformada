@@ -1,15 +1,23 @@
-
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileEdit, ArrowRight, Clock, List, BookOpen } from 'lucide-react';
 import Header from '@/components/Header';
-import { useLiturgy } from '@/context/LiturgyContext';
+import { LiturgyType, useLiturgy } from '@/context/LiturgyContext';
 
 const Index: React.FC = () => {
-  const { liturgy, resetLiturgy } = useLiturgy();
-  
+  const { liturgy, resetLiturgy, getSavedLiturgies, saveLiturgy } = useLiturgy();
+  const [savedLiturgies, setSavedLiturgies] = React.useState<LiturgyType[]>([]);
+
+  useEffect(() => {
+    setSavedLiturgies(getSavedLiturgies());
+  }, [getSavedLiturgies]);
+
+  useEffect(() => {
+    saveLiturgy();
+  }, [liturgy, saveLiturgy]);
+
   const hasDraft = liturgy.preacher || liturgy.liturgist || liturgy.sections.some(
     section => section.bibleReading || section.prayer || section.songs || 
     (section.sermon && (section.sermon.text || section.sermon.theme))
@@ -116,6 +124,35 @@ const Index: React.FC = () => {
                 </Link>
               </Button>
             </CardFooter>
+          </Card>
+
+          <Card className="transition-all duration-300 hover:shadow-md animate-slide-up delay-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                <span>Histórico de Liturgias</span>
+              </CardTitle>
+              <CardDescription>
+                Visualize e edite liturgias salvas anteriormente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {savedLiturgies.length > 0 ? (
+                <ul className="space-y-2">
+                  {savedLiturgies.map(liturgy => (
+                    <li key={liturgy.id} className="text-sm">
+                      <Link to={`/view/${liturgy.id}`} className="hover:underline">
+                        {liturgy.date ? new Date(liturgy.date).toLocaleDateString('pt-BR') : 'Sem data'} - {liturgy.preacher || 'Sem Pregador'}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Nenhuma liturgia salva encontrada.
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
       </main>

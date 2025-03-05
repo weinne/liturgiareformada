@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { generateUniqueId } from '../utils/liturgyUtils';
 
@@ -33,6 +32,8 @@ interface LiturgyContextType {
   resetLiturgy: () => void;
   generateShareableLink: () => string;
   reorderSections: (sourceId: string, targetId: string) => void;
+  getSavedLiturgies: () => LiturgyType[];
+  saveLiturgy: () => void;
 }
 
 const defaultSections: SectionType[] = [
@@ -141,6 +142,17 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     return `${window.location.origin}/#/view/${liturgy.id}`;
   };
 
+  const getSavedLiturgies = () => {
+    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+    return Object.values(savedLiturgies) as LiturgyType[];
+  };
+
+  const saveLiturgy = () => {
+    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+    savedLiturgies[liturgy.id] = liturgy;
+    localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
+  };
+
   return (
     <LiturgyContext.Provider value={{ 
       liturgy, 
@@ -149,13 +161,16 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       toggleSection, 
       resetLiturgy,
       generateShareableLink,
-      reorderSections
+      reorderSections,
+      getSavedLiturgies,
+      saveLiturgy
     }}>
       {children}
     </LiturgyContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLiturgy = () => {
   const context = useContext(LiturgyContext);
   if (context === undefined) {
