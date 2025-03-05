@@ -8,6 +8,7 @@ import ShareModal from '@/components/ShareModal';
 import PrintLayout from '@/components/PrintLayout';
 import { formatDate } from '@/utils/liturgyUtils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 
 const ViewLiturgy: React.FC = () => {
   const { liturgyId } = useParams<{ liturgyId: string }>();
@@ -17,25 +18,42 @@ const ViewLiturgy: React.FC = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const navigate = useNavigate();
   const printFrameRef = useRef<HTMLIFrameElement>(null);
+  const loadedLiturgies = useRef<{[id: string]: boolean}>({});
   
   useEffect(() => {
+    if (!liturgyId) return;
+    
+    // Verifique se já carregamos essa liturgia específica
+    if (loadedLiturgies.current[liturgyId]) return;
+    
     const fetchLiturgy = async () => {
-      if (!liturgyId) {
-        navigate('/');
-        return;
-      }
-
-      const liturgy = await loadLiturgyById(liturgyId);
-      if (liturgy) {
-        setCurrentLiturgy(liturgy);
-      } else {
-        // Se não encontrar a liturgia, mostrar mensagem por 3 segundos e redirecionar
+      loadedLiturgies.current[liturgyId] = true; // Marque como carregada
+      
+      try {
+        const liturgy = await loadLiturgyById(liturgyId);
+        if (liturgy) {
+          setCurrentLiturgy(liturgy);
+        } else {
+          toast({
+            title: "Liturgia não encontrada",
+            description: "A liturgia que você está tentando acessar não existe ou foi removida.",
+            variant: "destructive"
+          });
+          setTimeout(() => navigate('/'), 3000);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar liturgia:", error);
         setTimeout(() => navigate('/'), 3000);
       }
     };
 
     fetchLiturgy();
-  }, [liturgyId, loadLiturgyById, navigate]);
+  }, [liturgyId, navigate, loadLiturgyById]);
+
+  // Limpar loadedLiturgies quando o ID muda
+  useEffect(() => {
+    loadedLiturgies.current = {};
+  }, [liturgyId]);
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -143,6 +161,7 @@ const ViewLiturgy: React.FC = () => {
         open={isShareModalOpen}
         onOpenChange={setIsShareModalOpen}
         onPrint={handlePrint}
+        liturgy={currentLiturgy} // Passa a liturgia atual como prop
       />
       
       {isPrinting && (

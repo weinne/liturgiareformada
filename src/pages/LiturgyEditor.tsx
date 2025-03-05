@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import LiturgyForm from '@/components/LiturgyForm';
@@ -24,6 +23,12 @@ const LiturgyEditor: React.FC = () => {
   };
 
   const handlePreview = () => {
+    // Salva a liturgia atual explicitamente antes de visualizar
+    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+    savedLiturgies[liturgy.id] = liturgy;
+    localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
+    
+    // Agora navegue para a visualização
     navigate(`/view/${liturgy.id}`);
   };
 
@@ -110,6 +115,7 @@ const LiturgyEditor: React.FC = () => {
         open={shareModalOpen} 
         onOpenChange={setShareModalOpen} 
         onPrint={handlePreview}
+        liturgy={liturgy}
       />
     </div>
   );

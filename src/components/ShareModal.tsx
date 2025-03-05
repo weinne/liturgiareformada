@@ -9,33 +9,52 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Copy, Printer, Cloud } from 'lucide-react';
-import { useLiturgy } from '@/context/LiturgyContext';
+import { useLiturgy, LiturgyType } from '@/context/LiturgyContext';
 import { toast } from '@/components/ui/use-toast';
+import { saveLiturgyToFirebase } from '@/services/liturgyService';
 
 interface ShareModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPrint?: () => void;
+  liturgy?: LiturgyType; // Adiciona a liturgia como prop opcional
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) => {
-  const { generateShareableLink, isLoading } = useLiturgy();
+const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint, liturgy }) => {
+  const { isLoading: isContextLoading, generateShareableLink } = useLiturgy();
   const [copied, setCopied] = useState(false);
   const [shareableLink, setShareableLink] = useState('');
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [linkGenerated, setLinkGenerated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Função para gerar link, memoizada com useCallback
+  // Usar o generateLink modificado que recebe a liturgia como parâmetro
   const generateLink = useCallback(async () => {
-    if (linkGenerated && shareableLink) return; // Evita regeneração se já tiver um link
+    if (!liturgy || (linkGenerated && shareableLink)) return;
     
     setIsGeneratingLink(true);
+    setIsLoading(true);
+    
     try {
-      const link = await generateShareableLink();
-      if (link) {
-        setShareableLink(link);
-        setLinkGenerated(true);
+      // Cria um link usando o ID da liturgia
+      const baseLink = `${window.location.origin}/#/view/${liturgy.id}`;
+      
+      // Salva a liturgia no Firebase se não estiver compartilhada
+      if (!liturgy.shared) {
+        const sharedLiturgy = { ...liturgy, shared: true };
+        await saveLiturgyToFirebase(sharedLiturgy);
       }
+      
+      setShareableLink(baseLink);
+      setLinkGenerated(true);
+      
+      // Também guardar no localStorage
+      const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+      if (!savedLiturgies[liturgy.id]) {
+        savedLiturgies[liturgy.id] = liturgy;
+        localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
+      }
+      
     } catch (error) {
       console.error("Erro ao gerar link:", error);
       toast({
@@ -45,16 +64,24 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) 
       });
     } finally {
       setIsGeneratingLink(false);
+      setIsLoading(false);
     }
-  }, [generateShareableLink, linkGenerated, shareableLink]);
+  }, [liturgy, linkGenerated, shareableLink]);
 
-  // Effect separado apenas para controlar a geração do link
   useEffect(() => {
-    if (open && !linkGenerated) {
+    // Só gera link se tudo estiver ok e tivermos uma liturgia
+    if (open && !linkGenerated && !isGeneratingLink && !isLoading && liturgy) {
       generateLink();
       setCopied(false);
     }
-  }, [open, linkGenerated, generateLink]);
+    
+    // Reset quando o modal fechar
+    if (!open) {
+      setLinkGenerated(false);
+      setShareableLink('');
+      setCopied(false);
+    }
+  }, [open, liturgy, linkGenerated, isGeneratingLink, isLoading, generateLink]);
 
   const handleCopy = () => {
     if (!shareableLink) return;

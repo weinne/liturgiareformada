@@ -142,14 +142,19 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
   const generateShareableLink = async () => {
     setIsLoading(true);
     try {
-      // Marcar a liturgia como compartilhada
+      // Primeiro salvar no Firebase
       const sharedLiturgy = { ...liturgy, shared: true };
-      setLiturgy(sharedLiturgy);
-      
-      // Salvar no Firebase
       const success = await saveLiturgyToFirebase(sharedLiturgy);
       
       if (success) {
+        // Depois atualizar o estado local
+        setLiturgy(prev => ({ ...prev, shared: true }));
+        
+        // Garantir que também está salvo localmente
+        const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+        savedLiturgies[liturgy.id] = sharedLiturgy;
+        localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
+        
         toast({
           title: "Liturgia compartilhada",
           description: "A liturgia foi salva na nuvem e está pronta para ser compartilhada.",
@@ -164,7 +169,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: "Ocorreu um erro ao salvar a liturgia para compartilhamento.",
         variant: "destructive"
       });
-      return `${window.location.origin}/#/view/${liturgy.id}`;
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +188,23 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
   }, [liturgy]);
 
-  const loadLiturgyById = async (id: string): Promise<LiturgyType | null> => {
+  const loadLiturgyById = useCallback(async (id: string): Promise<LiturgyType | null> => {
+    // Aqui usamos um getter de estado atual ao invés da closure
+    // Isso evita dependência de liturgy.id
+    const currentLiturgy = liturgy;
+    
+    // Primeiro verificamos se é a liturgia atual que estamos editando
+    if (currentLiturgy.id === id) {
+      return currentLiturgy; // Retorna a liturgia atual imediatamente
+    }
+    
+    // Depois verifica as liturgias salvas localmente
+    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+    if (savedLiturgies[id]) {
+      return savedLiturgies[id] as LiturgyType;
+    }
+    
+    // Por fim, busca do Firebase
     setIsLoading(true);
     try {
       const loadedLiturgy = await getLiturgyFromFirebase(id);
@@ -197,7 +218,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Array vazio - função estável, não muda de referência
 
   return (
     <LiturgyContext.Provider value={{ 
