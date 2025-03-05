@@ -1,69 +1,45 @@
-# Welcome to your Lovable project
+# Liturgia Reformada
 
-## Project info
+## Descrição do Projeto
 
-**URL**: https://lovable.dev/projects/efa77d23-f30d-40a0-9491-dc905bfa47ff
+Liturgia Reformada é um aplicativo desenvolvido para auxiliar na organização e execução de liturgias reformadas. Este projeto é construído com tecnologias modernas como TypeScript, React, Vite, shadcn-ui e Tailwind CSS.
 
-## How can I edit this code?
+## Tecnologias Utilizadas
 
-There are several ways of editing your application.
+- **TypeScript**: Linguagem de programação que adiciona tipagem estática ao JavaScript.
+- **React**: Biblioteca JavaScript para construção de interfaces de usuário.
+- **Vite**: Ferramenta de bundling e desenvolvimento rápida e moderna.
+- **shadcn-ui**: Biblioteca de componentes UI.
+- **Tailwind CSS**: Framework CSS para estilização rápida e responsiva.
 
-**Use Lovable**
+## Como Executar o Projeto
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/efa77d23-f30d-40a0-9491-dc905bfa47ff) and start prompting.
+Siga os passos abaixo para clonar e executar o projeto localmente:
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Clone o repositório:**
+    ```sh
+    git clone https://github.com/weinne/liturgiareformada.git
+    ```
 
-**Use your preferred IDE**
+2. **Navegue até o diretório do projeto:**
+    ```sh
+    cd liturgiareformada
+    ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Instale as dependências:**
+    ```sh
+    npm install
+    ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+4. **Inicie o servidor de desenvolvimento:**
+    ```sh
+    npm run dev
+    ```
 
-Follow these steps:
+## Contribuição
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests para melhorias ou correções de bugs.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Licença
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/efa77d23-f30d-40a0-9491-dc905bfa47ff) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
