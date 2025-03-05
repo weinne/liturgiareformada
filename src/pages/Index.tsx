@@ -1,15 +1,19 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileEdit, ArrowRight, Clock, List, BookOpen } from 'lucide-react';
 import Header from '@/components/Header';
-import { useLiturgy } from '@/context/LiturgyContext';
+import { useLiturgy, getLiturgyHistory } from '@/context/LiturgyContext';
 
 const Index: React.FC = () => {
   const { liturgy, resetLiturgy } = useLiturgy();
-  
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    setHistory(getLiturgyHistory());
+  }, []);
+
   const hasDraft = liturgy.preacher || liturgy.liturgist || liturgy.sections.some(
     section => section.bibleReading || section.prayer || section.songs || 
     (section.sermon && (section.sermon.text || section.sermon.theme))
@@ -117,6 +121,49 @@ const Index: React.FC = () => {
               </Button>
             </CardFooter>
           </Card>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold tracking-tight mb-4">Histórico de Liturgias</h2>
+          {history.length > 0 ? (
+            <div className="space-y-4">
+              {history.map((liturgy, index) => (
+                <Card key={index} className="transition-all duration-300 hover:shadow-md animate-slide-up opacity-90 hover:opacity-100">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      <span>{liturgy.date}</span>
+                    </CardTitle>
+                    <CardDescription>
+                      {liturgy.preacher && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Pregador:</span> {liturgy.preacher}
+                        </div>
+                      )}
+                      {liturgy.liturgist && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Liturgo:</span> {liturgy.liturgist}
+                        </div>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button 
+                      asChild 
+                      className="w-full gap-1"
+                    >
+                      <Link to={`/view/${liturgy.id}`}>
+                        Continuar editando
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Nenhuma liturgia encontrada no histórico.</p>
+          )}
         </div>
       </main>
       
