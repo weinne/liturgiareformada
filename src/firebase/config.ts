@@ -2,17 +2,15 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-  };
-  
+  apiKey: "AIzaSyBRiLUDA_EuLKb4FZrLM8al1y4yx6s4nX4",
+  authDomain: "liturgiareformada-3c2cf.firebaseapp.com",
+  projectId: "liturgiareformada-3c2cf",
+  storageBucket: "liturgiareformada-3c2cf.firebasestorage.app",
+  messagingSenderId: "836346100839",
+  appId: "1:836346100839:web:98628889da11f8e19668c2",
+  measurementId: "G-TDV1W1ZE85"
+};
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
