@@ -4,7 +4,6 @@ const CACHE_NAME = 'liturgia-reformada-v1';
 // Arquivos para serem cacheados inicialmente
 const urlsToCache = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/icon.png',
 ];
