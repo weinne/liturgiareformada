@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,14 @@ import Header from '@/components/Header';
 import { useLiturgy } from '@/context/LiturgyContext';
 
 const Index: React.FC = () => {
-  const { liturgy, resetLiturgy } = useLiturgy();
+  const { liturgy, resetLiturgy, getEditedLiturgies } = useLiturgy();
   
   const hasDraft = liturgy.preacher || liturgy.liturgist || liturgy.sections.some(
     section => section.bibleReading || section.prayer || section.songs || 
     (section.sermon && (section.sermon.text || section.sermon.theme))
   );
+
+  const editedLiturgies = getEditedLiturgies();
 
   return (
     <div className="min-h-screen bg-secondary/40 flex flex-col">
@@ -118,6 +119,47 @@ const Index: React.FC = () => {
             </CardFooter>
           </Card>
         </div>
+
+        {editedLiturgies.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold tracking-tight mb-4">Histórico de Liturgias Editadas</h2>
+            <div className="space-y-4">
+              {editedLiturgies.map((editedLiturgy) => (
+                <Card key={editedLiturgy.id} className="transition-all duration-300 hover:shadow-md animate-slide-up opacity-90 hover:opacity-100">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      <span>{editedLiturgy.date}</span>
+                    </CardTitle>
+                    <CardDescription>
+                      {editedLiturgy.preacher && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Pregador:</span> {editedLiturgy.preacher}
+                        </div>
+                      )}
+                      {editedLiturgy.liturgist && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Liturgo:</span> {editedLiturgy.liturgist}
+                        </div>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button 
+                      asChild 
+                      className="w-full gap-1"
+                    >
+                      <Link to={`/view/${editedLiturgy.id}`}>
+                        Ver liturgia
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
       
       <footer className="py-6 border-t text-center text-sm text-muted-foreground">

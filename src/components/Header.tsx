@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, FileEdit, Share, BookOpen, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
+import { useLiturgy } from '@/context/LiturgyContext';
 
 interface HeaderProps {
   onShareClick?: () => void;
@@ -14,6 +14,8 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
   const location = useLocation();
   const isEditPage = location.pathname.includes('/edit');
   const isViewPage = location.pathname.includes('/view');
+  const { getEditedLiturgies } = useLiturgy();
+  const editedLiturgies = getEditedLiturgies();
   
   return (
     <header className="w-full border-b border-border bg-background bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm fixed top-0 z-10 transition-all duration-300 ease-spring">
@@ -64,6 +66,31 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
           )}
         </div>
       </div>
+      {editedLiturgies.length > 0 && (
+        <div className="container mt-4">
+          <h2 className="text-lg font-bold tracking-tight mb-2">Histórico de Liturgias Editadas</h2>
+          <div className="space-y-2">
+            {editedLiturgies.map((editedLiturgy) => (
+              <div key={editedLiturgy.id} className="transition-all duration-300 hover:shadow-md animate-slide-up opacity-90 hover:opacity-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{editedLiturgy.date}</p>
+                    <p className="font-medium">{editedLiturgy.preacher || "Não especificado"}</p>
+                  </div>
+                  <Button 
+                    asChild 
+                    className="gap-1"
+                  >
+                    <Link to={`/view/${editedLiturgy.id}`}>
+                      Ver liturgia
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
