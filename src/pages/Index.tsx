@@ -120,7 +120,7 @@ const Index: React.FC = () => {
         </div>
       </main>
       
-      <footer className="py-6 border-t bg-white text-center text-sm text-muted-foreground">
+      <footer className="py-6 border-t text-center text-sm text-muted-foreground">
         <div className="container">
           <p>Editor de Liturgias Reformadas © {new Date().getFullYear()}</p>
         </div>
