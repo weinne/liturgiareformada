@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { generateUniqueId } from '../utils/liturgyUtils';
 
@@ -69,6 +68,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     setLiturgy(prev => {
       const newLiturgy = { ...prev, ...updatedLiturgy };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      saveLiturgyToHistory(newLiturgy);
       return newLiturgy;
     });
   };
@@ -81,6 +81,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      saveLiturgyToHistory(newLiturgy);
       return newLiturgy;
     });
   };
@@ -93,6 +94,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      saveLiturgyToHistory(newLiturgy);
       return newLiturgy;
     });
   };
@@ -118,6 +120,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      saveLiturgyToHistory(newLiturgy);
       return newLiturgy;
     });
   };
@@ -130,6 +133,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     setLiturgy(newLiturgy);
     localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+    saveLiturgyToHistory(newLiturgy);
   };
 
   const generateShareableLink = () => {
@@ -139,6 +143,16 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
     
     return `${window.location.origin}/#/view/${liturgy.id}`;
+  };
+
+  const saveLiturgyToHistory = (liturgy: LiturgyType) => {
+    const history = JSON.parse(localStorage.getItem('liturgyHistory') || '[]');
+    const updatedHistory = [liturgy, ...history.filter((item: LiturgyType) => item.id !== liturgy.id)];
+    localStorage.setItem('liturgyHistory', JSON.stringify(updatedHistory));
+  };
+
+  const getLiturgyHistory = (): LiturgyType[] => {
+    return JSON.parse(localStorage.getItem('liturgyHistory') || '[]');
   };
 
   return (
@@ -163,3 +177,5 @@ export const useLiturgy = () => {
   }
   return context;
 };
+
+export { getLiturgyHistory };
