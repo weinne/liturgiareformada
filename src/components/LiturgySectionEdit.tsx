@@ -11,15 +11,23 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { ChevronDown, HelpCircle, BookOpen } from 'lucide-react';
+import { ChevronDown, HelpCircle, BookOpen, Music, GripVertical } from 'lucide-react';
 import { SectionType, useLiturgy } from '@/context/LiturgyContext';
-import { bibleReferenceSuggestions, prayerSuggestions } from '@/utils/liturgyUtils';
+import { bibleReferenceSuggestions, prayerSuggestions, hymnSuggestions } from '@/utils/liturgyUtils';
 
 interface LiturgySectionEditProps {
   section: SectionType;
+  onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, id: string) => void;
 }
 
-const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
+const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ 
+  section, 
+  onDragStart, 
+  onDragOver, 
+  onDrop 
+}) => {
   const { updateSection, toggleSection } = useLiturgy();
 
   const handleChange = (field: keyof SectionType, value: string) => {
@@ -35,22 +43,47 @@ const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
     });
   };
 
-  const handleSuggestion = (field: 'bibleReading' | 'prayer', value: string) => {
-    updateSection(section.id, { [field]: value });
+  const handleSuggestion = (field: 'bibleReading' | 'prayer' | 'songs', value: string) => {
+    // If songs field already has content, append with a line break
+    if (field === 'songs' && section.songs) {
+      updateSection(section.id, { [field]: section.songs + '\n\n' + value });
+    } else {
+      updateSection(section.id, { [field]: value });
+    }
   };
 
   const renderBibleSuggestions = () => {
     const suggestions = bibleReferenceSuggestions[section.type as keyof typeof bibleReferenceSuggestions] || [];
     
     return (
-      <div className="grid grid-cols-1 gap-1">
+      <div className="grid grid-cols-1 gap-1 max-h-80 overflow-y-auto">
+        {suggestions.map((suggestion, index) => (
+          <Button 
+            key={index} 
+            variant="ghost" 
+            size="sm" 
+            className="justify-start text-left h-auto py-1.5 whitespace-normal"
+            onClick={() => handleSuggestion('bibleReading', suggestion)}
+          >
+            {suggestion}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderHymnSuggestions = () => {
+    const suggestions = hymnSuggestions[section.type as keyof typeof hymnSuggestions] || [];
+    
+    return (
+      <div className="grid grid-cols-1 gap-1 max-h-80 overflow-y-auto">
         {suggestions.map((suggestion, index) => (
           <Button 
             key={index} 
             variant="ghost" 
             size="sm" 
             className="justify-start text-left h-auto py-1.5"
-            onClick={() => handleSuggestion('bibleReading', suggestion)}
+            onClick={() => handleSuggestion('songs', suggestion)}
           >
             {suggestion}
           </Button>
@@ -102,7 +135,21 @@ const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor={`sermon-response-${section.id}`}>Cântico em Resposta ao Sermão</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`sermon-response-${section.id}`}>Cântico em Resposta ao Sermão</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1">
+                    <Music className="h-4 w-4" />
+                    <span>Sugestões</span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-60">
+                  {renderHymnSuggestions()}
+                </PopoverContent>
+              </Popover>
+            </div>
             <Textarea
               id={`sermon-response-${section.id}`}
               value={section.sermon?.responseHymn || ''}
@@ -129,7 +176,7 @@ const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-60">
+              <PopoverContent align="end" className="w-72 max-h-[80vh] overflow-hidden">
                 {renderBibleSuggestions()}
               </PopoverContent>
             </Popover>
@@ -171,7 +218,21 @@ const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor={`songs-${section.id}`}>Cânticos</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor={`songs-${section.id}`}>Cânticos</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 gap-1">
+                  <Music className="h-4 w-4" />
+                  <span>Sugestões</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-60">
+                {renderHymnSuggestions()}
+              </PopoverContent>
+            </Popover>
+          </div>
           <Textarea
             id={`songs-${section.id}`}
             value={section.songs || ''}
@@ -185,9 +246,20 @@ const LiturgySectionEdit: React.FC<LiturgySectionEditProps> = ({ section }) => {
   };
 
   return (
-    <Card className={`mb-6 transition-all duration-300 ${section.enabled ? 'opacity-100' : 'opacity-60'}`}>
+    <Card 
+      className={`mb-6 transition-all duration-300 ${section.enabled ? 'opacity-100' : 'opacity-60'}`}
+      draggable={true}
+      onDragStart={(e) => onDragStart && onDragStart(e, section.id)}
+      onDragOver={(e) => onDragOver && onDragOver(e)}
+      onDrop={(e) => onDrop && onDrop(e, section.id)}
+    >
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">{section.title}</CardTitle>
+        <div className="flex items-center gap-2">
+          <div className="cursor-move">
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-lg font-medium">{section.title}</CardTitle>
+        </div>
         <div className="flex items-center gap-2">
           <Label htmlFor={`enable-${section.id}`} className="text-sm font-normal">
             {section.enabled ? 'Habilitado' : 'Desabilitado'}

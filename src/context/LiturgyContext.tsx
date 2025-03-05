@@ -32,6 +32,7 @@ interface LiturgyContextType {
   toggleSection: (sectionId: string) => void;
   resetLiturgy: () => void;
   generateShareableLink: () => string;
+  reorderSections: (sourceId: string, targetId: string) => void;
 }
 
 const defaultSections: SectionType[] = [
@@ -96,6 +97,31 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
   };
 
+  const reorderSections = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    
+    setLiturgy(prev => {
+      const sections = [...prev.sections];
+      const sourceIndex = sections.findIndex(section => section.id === sourceId);
+      const targetIndex = sections.findIndex(section => section.id === targetId);
+      
+      if (sourceIndex === -1 || targetIndex === -1) return prev;
+      
+      const [movedSection] = sections.splice(sourceIndex, 1);
+      sections.splice(targetIndex, 0, movedSection);
+      
+      // Update the titles to reflect the new order
+      const updatedSections = sections.map((section, index) => ({
+        ...section,
+        title: section.title.replace(/^\d+\./, `${index + 1}.`)
+      }));
+      
+      const newLiturgy = { ...prev, sections: updatedSections };
+      localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      return newLiturgy;
+    });
+  };
+
   const resetLiturgy = () => {
     const newLiturgy = {
       ...defaultLiturgy,
@@ -122,7 +148,8 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       updateSection, 
       toggleSection, 
       resetLiturgy,
-      generateShareableLink
+      generateShareableLink,
+      reorderSections
     }}>
       {children}
     </LiturgyContext.Provider>

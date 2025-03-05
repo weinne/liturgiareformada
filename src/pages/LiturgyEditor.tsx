@@ -7,11 +7,11 @@ import ShareModal from '@/components/ShareModal';
 import { Button } from '@/components/ui/button';
 import { useLiturgy } from '@/context/LiturgyContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, ArrowLeft, Save } from 'lucide-react';
+import { Eye, Save } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const LiturgyEditor: React.FC = () => {
-  const { liturgy } = useLiturgy();
+  const { liturgy, updateLiturgy } = useLiturgy();
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -25,6 +25,44 @@ const LiturgyEditor: React.FC = () => {
 
   const handlePreview = () => {
     navigate(`/view/${liturgy.id}`);
+  };
+
+  // Handle drag and drop for sections
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('sectionId', id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('sectionId');
+    
+    if (sourceId === targetId) return;
+    
+    const sections = [...liturgy.sections];
+    const sourceIndex = sections.findIndex(section => section.id === sourceId);
+    const targetIndex = sections.findIndex(section => section.id === targetId);
+    
+    if (sourceIndex > -1 && targetIndex > -1) {
+      const [movedSection] = sections.splice(sourceIndex, 1);
+      sections.splice(targetIndex, 0, movedSection);
+      
+      // Update the section titles to reflect their new order
+      const updatedSections = sections.map((section, index) => ({
+        ...section,
+        title: section.title.replace(/^\d+\./, `${index + 1}.`)
+      }));
+      
+      updateLiturgy({ sections: updatedSections });
+      
+      toast({
+        title: "Seção movida",
+        description: "A ordem das seções foi atualizada.",
+      });
+    }
   };
 
   return (
@@ -49,11 +87,20 @@ const LiturgyEditor: React.FC = () => {
         <LiturgyForm />
         
         <div className="mb-8 mt-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Momentos do Culto</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">
+            Momentos do Culto 
+            <span className="text-sm font-normal ml-2 text-muted-foreground">(arraste para reorganizar)</span>
+          </h2>
           
           <div className="space-y-6">
             {liturgy.sections.map(section => (
-              <LiturgySectionEdit key={section.id} section={section} />
+              <LiturgySectionEdit 
+                key={section.id} 
+                section={section} 
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              />
             ))}
           </div>
         </div>
