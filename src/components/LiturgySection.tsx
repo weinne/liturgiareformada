@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +12,7 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
   if (!section.enabled) return null;
 
   const classes = printMode 
-    ? 'mb-6 page-break-inside-avoid print:border-none print:shadow-none' 
+    ? 'mb-6 page-break-inside-avoid print:border-none print:shadow-none text-black' 
     : 'mb-6 transition-all duration-300 hover:shadow-md animate-scale-in';
 
   // Helper function to format Bible references nicely
@@ -28,13 +27,13 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
       
       return (
         <>
-          <div className="font-medium">{reference}</div>
-          <div className="mt-1 whitespace-pre-line">{content}</div>
+          <div className={`font-medium ${printMode ? 'text-black' : ''}`}>{reference}</div>
+          <div className={`mt-1 whitespace-pre-line ${printMode ? 'text-black' : ''}`}>{content}</div>
         </>
       );
     }
     
-    return <div className="whitespace-pre-line">{text}</div>;
+    return <div className={`whitespace-pre-line ${printMode ? 'text-black' : ''}`}>{text}</div>;
   };
 
   // Helper function to format hymn/psalm references nicely
@@ -54,13 +53,13 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
             const [_, reference, title] = hymnMatch;
             return (
               <div key={index} className="mb-2">
-                <div className="font-medium">{reference}</div>
-                <div>{title}</div>
+                <div className={`font-medium ${printMode ? 'text-black' : ''}`}>{reference}</div>
+                <div className={printMode ? 'text-black' : ''}>{title}</div>
               </div>
             );
           }
           
-          return <div key={index} className="mb-2">{hymn}</div>;
+          return <div key={index} className={`mb-2 ${printMode ? 'text-black' : ''}`}>{hymn}</div>;
         })}
       </>
     );
@@ -71,15 +70,15 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
       return (
         <>
           <div className="mb-4">
-            <Badge variant="outline" className="mb-2">Sermão</Badge>
-            <div className="font-medium mt-1 mb-2">Tema: {section.sermon.theme}</div>
-            <div className="text-sm whitespace-pre-line">{section.sermon.text}</div>
+            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Sermão</Badge>
+            <div className={`font-medium mt-1 mb-2 ${printMode ? 'text-black' : ''}`}>Tema: {section.sermon.theme}</div>
+            <div className={`text-sm whitespace-pre-line ${printMode ? 'text-black' : ''}`}>{section.sermon.text}</div>
           </div>
           
           {section.sermon.responseHymn && (
             <div className="mb-4">
-              <Badge variant="outline" className="mb-2">Cântico em Resposta</Badge>
-              <div className="text-sm">
+              <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Cântico em Resposta</Badge>
+              <div className={`text-sm ${printMode ? 'text-black' : ''}`}>
                 {formatHymnReference(section.sermon.responseHymn)}
               </div>
             </div>
@@ -92,8 +91,8 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
       <>
         {section.bibleReading && (
           <div className="mb-4">
-            <Badge variant="outline" className="mb-2">Leitura Bíblica</Badge>
-            <div className="text-sm">
+            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Leitura Bíblica</Badge>
+            <div className={`text-sm ${printMode ? 'text-black' : ''}`}>
               {formatBibleReference(section.bibleReading)}
             </div>
           </div>
@@ -101,15 +100,15 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
         
         {section.prayer && (
           <div className="mb-4">
-            <Badge variant="outline" className="mb-2">Oração</Badge>
-            <div className="text-sm whitespace-pre-line">{section.prayer}</div>
+            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Oração</Badge>
+            <div className={`text-sm whitespace-pre-line ${printMode ? 'text-black' : ''}`}>{section.prayer}</div>
           </div>
         )}
         
         {section.songs && (
           <div className="mb-4">
-            <Badge variant="outline" className="mb-2">Cânticos</Badge>
-            <div className="text-sm">
+            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Cânticos</Badge>
+            <div className={`text-sm ${printMode ? 'text-black' : ''}`}>
               {formatHymnReference(section.songs)}
             </div>
           </div>
@@ -121,9 +120,9 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
   return (
     <Card className={classes}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">{section.title}</CardTitle>
+        <CardTitle className={`text-lg font-medium ${printMode ? 'text-black' : ''}`}>{section.title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className={printMode ? 'text-black' : ''}>
         {renderSectionContent()}
       </CardContent>
     </Card>
