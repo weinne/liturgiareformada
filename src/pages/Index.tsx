@@ -23,7 +23,7 @@ const Index: React.FC = () => {
         <div className="mb-16 text-center animate-fade-in">
           <h1 className="text-4xl font-bold tracking-tight mb-4">Editor de Liturgias Reformadas</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Crie e compartilhe liturgias para cultos reformados seguindo a ordem inspirada em Chapell ou Michael Horton.
+            Crie e compartilhe liturgias para cultos reformados. 
           </p>
         </div>
         
