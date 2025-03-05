@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Music } from 'lucide-react';
 import SuggestionPopover from './SuggestionPopover';
-import { hymnSuggestions } from '@/utils/liturgyUtils';
+import { hymnSuggestions } from '@/utils/hymnSuggestions';
 
 interface HymnSuggestionsProps {
   sectionType: string;
