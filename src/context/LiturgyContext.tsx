@@ -138,7 +138,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     savedLiturgies[liturgy.id] = liturgy;
     localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
     
-    return `${window.location.origin}/view/${liturgy.id}`;
+    return `${window.location.origin}/#/view/${liturgy.id}`;
   };
 
   return (
