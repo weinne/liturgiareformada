@@ -1,3 +1,4 @@
+
 // Generate a unique ID for liturgies
 export const generateUniqueId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -104,6 +105,7 @@ export const hymnSuggestions = {
     'NC 14 - Santo! Santo! Santo!',
     'NC 19 - Rei Sublime',
     'NC 21 - Deus de Abraão',
+    'NC 22 - Os Céus Proclamam',
     'NC 25 - O Criador de Tudo',
     'NC 38 - Louvores Sem Fim',
     'Salmo 8 - Ó Senhor, quão maravilhoso',
@@ -111,7 +113,7 @@ export const hymnSuggestions = {
   ],
   lawReading: [
     'NC 33 - A Lei do Senhor',
-    'NC 72 - Minha Rocha é Cristo',
+    'NC 96 - Coração Quebrantado',
     'NC 78 - Perfeição',
     'NC 135 - Mais Perto da Cruz',
     'Salmo 19 - Os céus proclamam',
@@ -120,7 +122,7 @@ export const hymnSuggestions = {
   forgiveness: [
     'NC 58 - Bondoso Amigo',
     'NC 62 - Coração Quebrantado',
-    'NC 68 - Necessidade',
+    'NC 63 - Necessidade',
     'NC 89 - Amor Perene',
     'NC 96 - Salvação em Cristo',
     'Salmo 32 - Bem-aventurado',
@@ -130,7 +132,7 @@ export const hymnSuggestions = {
     'NC 87 - Preciosa Graça',
     'NC 129 - Oração Diária',
     'NC 179 - Vigilância e Oração',
-    'NC 189 - Comunicação',
+    'NC 86 - Espírito Divino',
     'Salmo 20 - O Senhor te ouça',
     'Salmo 130 - Das profundezas',
   ],
@@ -151,7 +153,7 @@ export const hymnSuggestions = {
     'NC 266 - Rude Cruz',
   ],
   lordsSupper: [
-    'NC 98 - Cristo, Pão da Vida',
+    'NC 261 - Ceia do Senhor',
     'NC 94 - Cordeiro Divino',
     'NC 112 - Qual Piloto',
     'NC 147 - Bendito Cordeiro',
@@ -162,7 +164,7 @@ export const hymnSuggestions = {
     'NC 119 - Trabalho Cristão',
     'NC 120 - Dedicação',
     'NC 165 - Dedicação Pessoal',
-    'NC 176 - Gratidão',
+    'NC 95 - Mais de Jesus',
     'NC 207 - Renovo Espiritual',
     'Salmo 116 - Que darei ao Senhor',
   ],
@@ -170,15 +172,15 @@ export const hymnSuggestions = {
     'NC 170 - Firmeza na Fé',
     'NC 171 - Crer e Observar',
     'NC 208 - O Combate',
-    'NC 235 - Seguir com Cristo',
+    'NC 320 - Oração da Noite',
     'NC 299 - Renovação',
     'Salmo 67 - Deus tenha misericórdia',
   ],
   blessing: [
     'NC 150 - Bênção Antiga',
     'NC 226 - Eu Te Seguirei',
-    'NC 324 - Oração da Noite',
-    'NC 225 - Oração do Senhor',
+    'NC 320 - Oração da Noite',
+    'NC 225 - O Pai Nosso',
     'Salmo 121 - O Senhor é teu guarda',
     'Salmo 134 - Bendizei ao Senhor',
   ],
