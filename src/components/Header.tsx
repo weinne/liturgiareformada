@@ -3,6 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, FileEdit, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from './ThemeToggle';
 
 interface HeaderProps {
   onShareClick?: () => void;
@@ -15,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
   const isViewPage = location.pathname.includes('/view');
   
   return (
-    <header className="w-full border-b border-border bg-white bg-opacity-80 backdrop-blur-sm fixed top-0 z-10 transition-all duration-300 ease-spring">
+    <header className="w-full border-b border-border bg-background bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm fixed top-0 z-10 transition-all duration-300 ease-spring">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-4">
           {showBackButton && (
@@ -38,6 +39,8 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
         </div>
         
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+          
           {(isEditPage || isViewPage) && onShareClick && (
             <Button onClick={onShareClick} variant="outline" size="sm" className="animate-fade-in">
               <Share className="h-4 w-4 mr-1" />

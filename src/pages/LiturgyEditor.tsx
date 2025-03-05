@@ -66,7 +66,7 @@ const LiturgyEditor: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-secondary/40 flex flex-col">
+    <div className="min-h-screen bg-secondary/40 dark:bg-secondary/20 flex flex-col">
       <Header showBackButton onShareClick={() => setShareModalOpen(true)} />
       
       <main className="flex-1 container max-w-3xl py-24 px-4">

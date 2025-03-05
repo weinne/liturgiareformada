@@ -44,6 +44,45 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217 91% 60%;
   }
+
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 20% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 220 40% 12%;
+
+    --secondary: 220 25% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 25% 16%;
+    --muted-foreground: 220 10% 70%;
+
+    --accent: 220 25% 16%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 25%;
+    --input: 220 13% 25%;
+    --ring: 220 14% 70%;
+
+    --sidebar-background: 220 20% 14%;
+    --sidebar-foreground: 240 5% 84%;
+    --sidebar-primary: 240 6% 90%;
+    --sidebar-primary-foreground: 220 20% 10%;
+    --sidebar-accent: 240 5% 26%;
+    --sidebar-accent-foreground: 240 6% 90%;
+    --sidebar-border: 220 13% 25%;
+    --sidebar-ring: 217 91% 60%;
+  }
 }
 
 @layer base {
@@ -71,7 +110,7 @@
   }
 
   .glass-panel {
-    @apply bg-white bg-opacity-70 backdrop-blur-md border border-white border-opacity-20 shadow-sm;
+    @apply bg-white bg-opacity-70 dark:bg-black dark:bg-opacity-30 backdrop-blur-md border border-white border-opacity-20 dark:border-white/10 shadow-sm;
   }
   
   .page-transition-enter {
