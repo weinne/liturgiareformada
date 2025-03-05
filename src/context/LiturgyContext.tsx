@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { generateUniqueId } from '../utils/liturgyUtils';
 
@@ -33,6 +32,7 @@ interface LiturgyContextType {
   resetLiturgy: () => void;
   generateShareableLink: () => string;
   reorderSections: (sourceId: string, targetId: string) => void;
+  getEditedLiturgies: () => LiturgyType[];
 }
 
 const defaultSections: SectionType[] = [
@@ -65,11 +65,22 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     return savedLiturgy ? JSON.parse(savedLiturgy) : defaultLiturgy;
   });
 
+  const [editedLiturgies, setEditedLiturgies] = useState<LiturgyType[]>(() => {
+    const savedEditedLiturgies = localStorage.getItem('editedLiturgies');
+    return savedEditedLiturgies ? JSON.parse(savedEditedLiturgies) : [];
+  });
+
   const updateLiturgy = (updatedLiturgy: Partial<LiturgyType>) => {
     setLiturgy(prev => {
       const newLiturgy = { ...prev, ...updatedLiturgy };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
       return newLiturgy;
+    });
+
+    setEditedLiturgies(prev => {
+      const updatedLiturgies = [...prev, liturgy];
+      localStorage.setItem('editedLiturgies', JSON.stringify(updatedLiturgies));
+      return updatedLiturgies;
     });
   };
 
@@ -141,6 +152,10 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     return `${window.location.origin}/view/${liturgy.id}`;
   };
 
+  const getEditedLiturgies = () => {
+    return editedLiturgies;
+  };
+
   return (
     <LiturgyContext.Provider value={{ 
       liturgy, 
@@ -149,7 +164,8 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       toggleSection, 
       resetLiturgy,
       generateShareableLink,
-      reorderSections
+      reorderSections,
+      getEditedLiturgies
     }}>
       {children}
     </LiturgyContext.Provider>

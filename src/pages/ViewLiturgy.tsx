@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -13,7 +12,7 @@ import { LiturgyType } from '@/context/LiturgyContext';
 
 const ViewLiturgy: React.FC = () => {
   const { liturgyId } = useParams<{ liturgyId: string }>();
-  const { liturgy: currentLiturgy, updateLiturgy } = useLiturgy();
+  const { liturgy: currentLiturgy, updateLiturgy, getEditedLiturgies } = useLiturgy();
   const [liturgy, setLiturgy] = useState<LiturgyType | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [isPrintMode, setIsPrintMode] = useState(false);
@@ -63,6 +62,8 @@ const ViewLiturgy: React.FC = () => {
     return <PrintLayout liturgy={liturgy} />;
   }
 
+  const editedLiturgies = getEditedLiturgies();
+
   return (
     <div className="min-h-screen bg-secondary/40 flex flex-col">
       <Header showBackButton onShareClick={() => setShareModalOpen(true)} />
@@ -104,6 +105,32 @@ const ViewLiturgy: React.FC = () => {
             <LiturgySection key={section.id} section={section} />
           ))}
         </div>
+
+        {editedLiturgies.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold tracking-tight mb-4">Histórico de Liturgias Editadas</h2>
+            <div className="space-y-4">
+              {editedLiturgies.map((editedLiturgy) => (
+                <div key={editedLiturgy.id} className="transition-all duration-300 hover:shadow-md animate-slide-up opacity-90 hover:opacity-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{formatDate(editedLiturgy.date)}</p>
+                      <p className="font-medium">{editedLiturgy.preacher || "Não especificado"}</p>
+                    </div>
+                    <Button 
+                      asChild 
+                      className="gap-1"
+                    >
+                      <Link to={`/view/${editedLiturgy.id}`}>
+                        Ver liturgia
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
       
       <ShareModal 
