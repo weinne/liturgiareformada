@@ -2,7 +2,7 @@
     "name": "Liturgia Reformada",
     "short_name": "Liturgia",
     "description": "Aplicativo de Liturgia Reformada",
-    "start_url": "/index.html",
+    "start_url": "/",
     "display": "standalone",
     "scope" : "/",
     "background_color": "#ffffff",
