@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, FileEdit, Share } from 'lucide-react';
+import { ChevronLeft, FileEdit, Share, BookOpen, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
 
@@ -29,10 +29,16 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
           )}
           
           <div className="flex flex-col items-start">
-            <h1 className="text-xl font-medium tracking-tight">
-              {isViewPage ? "Visualizar Liturgia" : isEditPage ? "Editor de Liturgia" : "Editor de Liturgias Reformadas"}
+            <h1 className="text-xl font-medium tracking-tight flex items-center">
+              <BookOpen className="h-5 w-5 mr-2 inline-block sm:hidden" />
+              <span className="hidden sm:inline">
+                {isViewPage ? "Visualizar Liturgia" : isEditPage ? "Editor de Liturgia" : "Editor de Liturgias Reformadas"}
+              </span>
+              <span className="sm:hidden">
+                {isViewPage ? "Visualizar" : isEditPage ? "Editor" : "Liturgias"}
+              </span>
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground hidden sm:block">
               {isViewPage ? "Visualize e imprima a liturgia" : isEditPage ? "Crie e edite a sua liturgia" : "Crie liturgias para cultos reformados"}
             </p>
           </div>
@@ -43,16 +49,16 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
           
           {(isEditPage || isViewPage) && onShareClick && (
             <Button onClick={onShareClick} variant="outline" size="sm" className="animate-fade-in">
-              <Share className="h-4 w-4 mr-1" />
-              Compartilhar
+              <Share className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Compartilhar</span>
             </Button>
           )}
           
           {!isEditPage && !isViewPage && (
             <Button asChild variant="default" size="sm" className="animate-fade-in">
               <Link to="/edit">
-                <FileEdit className="h-4 w-4 mr-1" />
-                Novo
+                <FileEdit className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Novo</span>
               </Link>
             </Button>
           )}
