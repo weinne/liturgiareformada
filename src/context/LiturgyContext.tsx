@@ -12,6 +12,7 @@ export type SectionType = {
   sermon?: {
     text: string;
     theme: string;
+    responseHymn?: string;
   };
   enabled: boolean;
 };

@@ -17,6 +17,25 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
     : 'mb-6 transition-all duration-300 hover:shadow-md animate-scale-in';
 
   const renderSectionContent = () => {
+    if (section.type === 'wordPreaching' && section.sermon) {
+      return (
+        <>
+          <div className="mb-4">
+            <Badge variant="outline" className="mb-2">Sermão</Badge>
+            <div className="font-medium mt-1 mb-2">Tema: {section.sermon.theme}</div>
+            <div className="text-sm whitespace-pre-line">{section.sermon.text}</div>
+          </div>
+          
+          {section.sermon.responseHymn && (
+            <div className="mb-4">
+              <Badge variant="outline" className="mb-2">Cântico em Resposta</Badge>
+              <div className="text-sm whitespace-pre-line">{section.sermon.responseHymn}</div>
+            </div>
+          )}
+        </>
+      );
+    }
+    
     return (
       <>
         {section.bibleReading && (
@@ -37,14 +56,6 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
           <div className="mb-4">
             <Badge variant="outline" className="mb-2">Cânticos</Badge>
             <div className="text-sm whitespace-pre-line">{section.songs}</div>
-          </div>
-        )}
-        
-        {section.type === 'wordPreaching' && section.sermon && (
-          <div className="mb-4">
-            <Badge variant="outline" className="mb-2">Sermão</Badge>
-            <div className="font-medium mt-1 mb-2">Tema: {section.sermon.theme}</div>
-            <div className="text-sm whitespace-pre-line">{section.sermon.text}</div>
           </div>
         )}
       </>
