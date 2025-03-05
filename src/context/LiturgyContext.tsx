@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { generateUniqueId } from '../utils/liturgyUtils';
+import { saveLiturgyToFirebase, getLiturgyFromFirebase } from '@/services/liturgyService';
+import { toast } from '@/components/ui/use-toast';
 
 export type SectionType = {
   id: string;
@@ -22,6 +24,7 @@ export type LiturgyType = {
   liturgist: string;
   date: string;
   sections: SectionType[];
+  shared?: boolean;
 };
 
 interface LiturgyContextType {
@@ -30,10 +33,12 @@ interface LiturgyContextType {
   updateSection: (sectionId: string, updatedSection: Partial<SectionType>) => void;
   toggleSection: (sectionId: string) => void;
   resetLiturgy: () => void;
-  generateShareableLink: () => string;
+  generateShareableLink: () => Promise<string>;
   reorderSections: (sourceId: string, targetId: string) => void;
   getSavedLiturgies: () => LiturgyType[];
   saveLiturgy: () => void;
+  loadLiturgyById: (id: string) => Promise<LiturgyType | null>;
+  isLoading: boolean;
 }
 
 const defaultSections: SectionType[] = [
@@ -65,6 +70,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     const savedLiturgy = localStorage.getItem('currentLiturgy');
     return savedLiturgy ? JSON.parse(savedLiturgy) : defaultLiturgy;
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const updateLiturgy = (updatedLiturgy: Partial<LiturgyType>) => {
     setLiturgy(prev => {
@@ -133,24 +139,64 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
   };
 
-  const generateShareableLink = () => {
-    // Save the liturgy to localStorage with its ID
-    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
-    savedLiturgies[liturgy.id] = liturgy;
-    localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
-    
-    return `${window.location.origin}/#/view/${liturgy.id}`;
+  const generateShareableLink = async () => {
+    setIsLoading(true);
+    try {
+      // Marcar a liturgia como compartilhada
+      const sharedLiturgy = { ...liturgy, shared: true };
+      setLiturgy(sharedLiturgy);
+      
+      // Salvar no Firebase
+      const success = await saveLiturgyToFirebase(sharedLiturgy);
+      
+      if (success) {
+        toast({
+          title: "Liturgia compartilhada",
+          description: "A liturgia foi salva na nuvem e está pronta para ser compartilhada.",
+        });
+      }
+      
+      return `${window.location.origin}/#/view/${liturgy.id}`;
+    } catch (error) {
+      console.error("Error generating shareable link:", error);
+      toast({
+        title: "Erro ao compartilhar",
+        description: "Ocorreu um erro ao salvar a liturgia para compartilhamento.",
+        variant: "destructive"
+      });
+      return `${window.location.origin}/#/view/${liturgy.id}`;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getSavedLiturgies = () => {
+  const getSavedLiturgies = useCallback(() => {
     const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
     return Object.values(savedLiturgies) as LiturgyType[];
-  };
+  }, []);
 
-  const saveLiturgy = () => {
+  const saveLiturgy = useCallback(() => {
+    if (!liturgy.preacher && !liturgy.liturgist) return; // Não salvar liturgias vazias
+    
     const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
     savedLiturgies[liturgy.id] = liturgy;
     localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
+  }, [liturgy]);
+
+  const loadLiturgyById = async (id: string): Promise<LiturgyType | null> => {
+    setIsLoading(true);
+    try {
+      const loadedLiturgy = await getLiturgyFromFirebase(id);
+      if (loadedLiturgy) {
+        return loadedLiturgy;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error loading liturgy:", error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -163,7 +209,9 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       generateShareableLink,
       reorderSections,
       getSavedLiturgies,
-      saveLiturgy
+      saveLiturgy,
+      loadLiturgyById,
+      isLoading
     }}>
       {children}
     </LiturgyContext.Provider>
