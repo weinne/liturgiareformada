@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -25,22 +25,40 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) 
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [linkGenerated, setLinkGenerated] = useState(false);
 
+  // Função para gerar link, memoizada com useCallback
+  const generateLink = useCallback(async () => {
+    if (linkGenerated && shareableLink) return; // Evita regeneração se já tiver um link
+    
+    setIsGeneratingLink(true);
+    try {
+      const link = await generateShareableLink();
+      if (link) {
+        setShareableLink(link);
+        setLinkGenerated(true);
+      }
+    } catch (error) {
+      console.error("Erro ao gerar link:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o link de compartilhamento.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  }, [generateShareableLink, linkGenerated, shareableLink]);
+
+  // Effect separado apenas para controlar a geração do link
   useEffect(() => {
     if (open && !linkGenerated) {
-      const generateLink = async () => {
-        setIsGeneratingLink(true);
-        const link = await generateShareableLink();
-        setShareableLink(link);
-        setIsGeneratingLink(false);
-        setLinkGenerated(true);
-      };
-      
       generateLink();
       setCopied(false);
     }
-  }, [open, generateShareableLink, linkGenerated]);
+  }, [open, linkGenerated, generateLink]);
 
   const handleCopy = () => {
+    if (!shareableLink) return;
+    
     navigator.clipboard.writeText(shareableLink);
     setCopied(true);
     
@@ -54,11 +72,24 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) 
 
   const handleClose = () => {
     onOpenChange(false);
-    setLinkGenerated(false); // Resetar o estado quando o modal for fechado
+    // Não resetamos o linkGenerated aqui para evitar regeneração desnecessária
+    // Somente resetamos se for necessário gerar um novo link na próxima vez
+  };
+
+  // Reset completo ao abrir com nova liturgia
+  const handleReset = () => {
+    setLinkGenerated(false);
+    setShareableLink('');
+    setCopied(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Compartilhar Liturgia</DialogTitle>
@@ -82,7 +113,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) 
             size="sm" 
             onClick={handleCopy} 
             className="px-3"
-            disabled={isGeneratingLink || isLoading}
+            disabled={isGeneratingLink || isLoading || !shareableLink}
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span className="sr-only">Copiar</span>
@@ -96,14 +127,16 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, onPrint }) 
           </div>
         )}
         
-        
+        <div className="text-sm text-muted-foreground mt-2">
+          {shareableLink && "Este link funciona para qualquer pessoa, mesmo que não tenha o aplicativo instalado."}
+        </div>
         
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleClose}>
             Fechar
           </Button>
           
-          {onPrint && (
+          {linkGenerated && onPrint && (
             <Button variant="default" onClick={onPrint} disabled={isGeneratingLink || isLoading}>
               <Printer className="h-4 w-4 mr-2" />
               Imprimir
