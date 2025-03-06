@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import LiturgyEditor from "./pages/LiturgyEditor";
 import ViewLiturgy from "./pages/ViewLiturgy";
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/edit" element={<LiturgyEditor />} />
               <Route path="/view/:liturgyId" element={<ViewLiturgy />} />
+              <Route path="/about" element={<About />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

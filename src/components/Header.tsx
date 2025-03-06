@@ -1,9 +1,16 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, FileEdit, Share, BookOpen, Menu } from 'lucide-react';
+import { ChevronLeft, FileEdit, Share, BookOpen, Menu, Church, Home, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
+import PWAInstallPrompt from './PWAInstallPrompt';
+import SyncStatus from './SyncStatus';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onShareClick?: () => void;
@@ -14,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
   const location = useLocation();
   const isEditPage = location.pathname.includes('/edit');
   const isViewPage = location.pathname.includes('/view');
+  const [menuOpen, setMenuOpen] = useState(false);
   
   return (
     <header className="w-full border-b border-border bg-background bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm fixed top-0 z-10 transition-all duration-300 ease-spring">
@@ -44,24 +52,63 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
+        <div className="flex items-center gap-4">
+          {/* Menu para desktop */}
+          <div className="hidden sm:flex items-center gap-4">
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center">
+              <Home className="mr-2 h-4 w-4" />
+              Início
+            </Link>
+            <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center">
+              <Info className="mr-2 h-4 w-4" />
+              Sobre
+            </Link>
+          </div>
           
-          {(isEditPage || isViewPage) && onShareClick && (
-            <Button onClick={onShareClick} variant="outline" size="sm" className="animate-fade-in">
-              <Share className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Compartilhar</span>
-            </Button>
-          )}
+          {/* Menu hambúrguer para mobile */}
+          <div className="sm:hidden">
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild onClick={() => setMenuOpen(false)}>
+                  <Link to="/" className="flex items-center">
+                    <Home className="mr-2 h-4 w-4" />
+                    Início
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild onClick={() => setMenuOpen(false)}>
+                  <Link to="/about" className="flex items-center">
+                    <Info className="mr-2 h-4 w-4" />
+                    Sobre
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           
-          {!isEditPage && !isViewPage && (
-            <Button asChild variant="default" size="sm" className="animate-fade-in">
-              <Link to="/edit">
-                <FileEdit className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Novo</span>
-              </Link>
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            
+            {(isEditPage || isViewPage) && onShareClick && (
+              <Button onClick={onShareClick} variant="outline" size="sm" className="animate-fade-in">
+                <Share className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Compartilhar</span>
+              </Button>
+            )}
+            
+            {!isEditPage && !isViewPage && (
+              <Button asChild variant="default" size="sm" className="animate-fade-in">
+                <Link to="/edit">
+                  <FileEdit className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Novo</span>
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </header>
