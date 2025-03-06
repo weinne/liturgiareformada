@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect, useRef } from 'react';
 import { generateUniqueId } from '../utils/liturgyUtils';
 import { saveLiturgyToFirebase, getLiturgyFromFirebase } from '@/services/liturgyService';
 import { toast } from '@/components/ui/use-toast';
+
+// Status de sincronização
+export type SyncStatus = 'synced' | 'syncing' | 'pending' | 'error';
 
 export type SectionType = {
   id: string;
@@ -36,9 +39,11 @@ interface LiturgyContextType {
   generateShareableLink: () => Promise<string>;
   reorderSections: (sourceId: string, targetId: string) => void;
   getSavedLiturgies: () => LiturgyType[];
-  saveLiturgy: () => void;
+  saveLiturgy: (showNotification?: boolean) => Promise<boolean>;
   loadLiturgyById: (id: string) => Promise<LiturgyType | null>;
   isLoading: boolean;
+  syncStatus: SyncStatus;
+  forceSyncToCloud: (showNotification?: boolean) => Promise<boolean>;
 }
 
 const defaultSections: SectionType[] = [
@@ -66,18 +71,136 @@ const LiturgyContext = createContext<LiturgyContextType | undefined>(undefined);
 
 export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [liturgy, setLiturgy] = useState<LiturgyType>(() => {
-    // Try to load from localStorage
     const savedLiturgy = localStorage.getItem('currentLiturgy');
     return savedLiturgy ? JSON.parse(savedLiturgy) : defaultLiturgy;
   });
   const [isLoading, setIsLoading] = useState(false);
+  // Começamos com 'pending' se houver uma liturgia salva
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => {
+    const savedLiturgy = localStorage.getItem('currentLiturgy');
+    return savedLiturgy ? 'pending' : 'synced';
+  });
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSyncRef = useRef<boolean>(false);
+
+  // Função para verificar a conexão com a internet
+  const isOnline = () => {
+    return navigator.onLine;
+  };
+
+  // Força sincronização imediata
+  const forceSyncToCloud = useCallback(async (showNotification = true): Promise<boolean> => {
+    // Se não há dados para salvar, retorna sucesso
+    if (!liturgy.preacher && !liturgy.liturgist && !liturgy.sections.some(s => 
+      s.bibleReading || s.prayer || s.songs || 
+      (s.sermon && (s.sermon.text || s.sermon.theme))
+    )) {
+      setSyncStatus('synced');
+      return true;
+    }
+
+    if (!isOnline()) {
+      setSyncStatus('error');
+      if (showNotification) {
+        toast({
+          title: "Sem conexão",
+          description: "Você está offline. A sincronização ocorrerá automaticamente quando houver conexão.",
+          variant: "destructive"
+        });
+      }
+      return false;
+    }
+
+    try {
+      setSyncStatus('syncing');
+      await saveLiturgyToFirebase(liturgy);
+      setSyncStatus('synced');
+      pendingSyncRef.current = false;
+      
+      if (showNotification) {
+        toast({
+          title: "Sincronizado",
+          description: "Liturgia salva com sucesso na nuvem."
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error("Erro ao sincronizar:", error);
+      setSyncStatus('error');
+      
+      if (showNotification) {
+        toast({
+          title: "Erro na sincronização",
+          description: "Não foi possível salvar na nuvem. Tentaremos novamente mais tarde.",
+          variant: "destructive"
+        });
+      }
+      return false;
+    }
+  }, [liturgy]);
+
+  // Função para salvar na nuvem com debounce
+  const debouncedSaveToCloud = useCallback(() => {
+    // Limpa o timeout anterior se houver
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    // Marca que há uma sincronização pendente
+    pendingSyncRef.current = true;
+    setSyncStatus('pending');
+    
+    // Configura um novo timeout
+    syncTimeoutRef.current = setTimeout(() => {
+      forceSyncToCloud(false);
+    }, 2000); // 2 segundos de debounce
+  }, [forceSyncToCloud]);
+
+  // Monitorar mudanças de conexão e status
+  useEffect(() => {
+    const handleOnline = () => {
+      if (pendingSyncRef.current || syncStatus === 'error') {
+        debouncedSaveToCloud();
+      }
+    };
+
+    const handleOffline = () => {
+      if (syncStatus === 'syncing' || syncStatus === 'pending') {
+        setSyncStatus('error');
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Tentar sincronizar ao montar se houver dados pendentes
+    if (pendingSyncRef.current || syncStatus === 'pending') {
+      debouncedSaveToCloud();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [debouncedSaveToCloud, syncStatus]);
 
   const updateLiturgy = (updatedLiturgy: Partial<LiturgyType>) => {
     setLiturgy(prev => {
       const newLiturgy = { ...prev, ...updatedLiturgy };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
       return newLiturgy;
     });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
   };
 
   const updateSection = (sectionId: string, updatedSection: Partial<SectionType>) => {
@@ -88,8 +211,16 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
       return newLiturgy;
     });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
   };
 
   const toggleSection = (sectionId: string) => {
@@ -100,8 +231,16 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
       return newLiturgy;
     });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
   };
 
   const reorderSections = (sourceId: string, targetId: string) => {
@@ -125,8 +264,16 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const newLiturgy = { ...prev, sections: updatedSections };
       localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
       return newLiturgy;
     });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
   };
 
   const resetLiturgy = () => {
@@ -137,30 +284,23 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     setLiturgy(newLiturgy);
     localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+    
+    // Reiniciar o estado de sincronização
+    setSyncStatus('synced');
+    pendingSyncRef.current = false;
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = null;
+    }
   };
 
   const generateShareableLink = async () => {
     setIsLoading(true);
     try {
-      // Primeiro salvar no Firebase
-      const sharedLiturgy = { ...liturgy, shared: true };
-      const success = await saveLiturgyToFirebase(sharedLiturgy);
+      // Primeiro forçar a sincronização com Firebase, sem mostrar notificação duplicada
+      await forceSyncToCloud(false);
       
-      if (success) {
-        // Depois atualizar o estado local
-        setLiturgy(prev => ({ ...prev, shared: true }));
-        
-        // Garantir que também está salvo localmente
-        const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
-        savedLiturgies[liturgy.id] = sharedLiturgy;
-        localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
-        
-        toast({
-          title: "Liturgia compartilhada",
-          description: "A liturgia foi salva na nuvem e está pronta para ser compartilhada.",
-        });
-      }
-      
+      // Se chegarmos aqui, é porque a sincronização foi bem-sucedida
       return `${window.location.origin}/#/view/${liturgy.id}`;
     } catch (error) {
       console.error("Error generating shareable link:", error);
@@ -169,7 +309,7 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: "Ocorreu um erro ao salvar a liturgia para compartilhamento.",
         variant: "destructive"
       });
-      return null;
+      return '';
     } finally {
       setIsLoading(false);
     }
@@ -180,65 +320,87 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
     return Object.values(savedLiturgies) as LiturgyType[];
   }, []);
 
-  const saveLiturgy = useCallback(() => {
-    if (!liturgy.preacher && !liturgy.liturgist) return; // Não salvar liturgias vazias
+  const saveLiturgy = useCallback(async (showNotification = false): Promise<boolean> => {
+    if (!liturgy.preacher && !liturgy.liturgist) return false; // Não salvar liturgias vazias
     
+    // Salvar localmente
     const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
     savedLiturgies[liturgy.id] = liturgy;
     localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
-  }, [liturgy]);
+    
+    // Tentar salvar na nuvem
+    return await forceSyncToCloud(showNotification);
+  }, [liturgy, forceSyncToCloud]);
 
-  const loadLiturgyById = useCallback(async (id: string): Promise<LiturgyType | null> => {
-    // Aqui usamos um getter de estado atual ao invés da closure
-    // Isso evita dependência de liturgy.id
-    const currentLiturgy = liturgy;
-    
-    // Primeiro verificamos se é a liturgia atual que estamos editando
-    if (currentLiturgy.id === id) {
-      return currentLiturgy; // Retorna a liturgia atual imediatamente
+const loadLiturgyById = useCallback(async (id: string): Promise<LiturgyType | null> => {
+  // Aqui usamos um getter de estado atual ao invés da closure
+  // Isso evita dependência de liturgy.id
+  const currentLiturgy = liturgy;
+  
+  // Primeiro verificamos se é a liturgia atual que estamos editando
+  if (currentLiturgy.id === id) {
+    return currentLiturgy; // Retorna a liturgia atual imediatamente
+  }
+  
+  // Depois verifica as liturgias salvas localmente
+  const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+  if (savedLiturgies[id]) {
+    const loadedLiturgy = savedLiturgies[id] as LiturgyType;
+    // Atualiza o estado da liturgia atual
+    setLiturgy(loadedLiturgy);
+    localStorage.setItem('currentLiturgy', JSON.stringify(loadedLiturgy));
+    setSyncStatus('synced'); // A liturgia está sincronizada porque foi carregada
+    return loadedLiturgy;
+  }
+  
+  // Por fim, busca do Firebase
+  setIsLoading(true);
+  try {
+    const loadedLiturgy = await getLiturgyFromFirebase(id);
+    if (loadedLiturgy) {
+      // Atualiza o estado da liturgia atual
+      setLiturgy(loadedLiturgy);
+      localStorage.setItem('currentLiturgy', JSON.stringify(loadedLiturgy));
+      setSyncStatus('synced'); // A liturgia está sincronizada porque foi carregada do servidor
+      
+      // Também salva nas liturgias locais
+      const allSavedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
+      allSavedLiturgies[loadedLiturgy.id] = loadedLiturgy;
+      localStorage.setItem('savedLiturgies', JSON.stringify(allSavedLiturgies));
+      
+      return loadedLiturgy;
     }
-    
-    // Depois verifica as liturgias salvas localmente
-    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
-    if (savedLiturgies[id]) {
-      return savedLiturgies[id] as LiturgyType;
-    }
-    
-    // Por fim, busca do Firebase
-    setIsLoading(true);
-    try {
-      const loadedLiturgy = await getLiturgyFromFirebase(id);
-      if (loadedLiturgy) {
-        return loadedLiturgy;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error loading liturgy:", error);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []); // Array vazio - função estável, não muda de referência
+    return null;
+  } catch (error) {
+    console.error("Error loading liturgy:", error);
+    return null;
+  } finally {
+    setIsLoading(false);
+  }
+}, [liturgy]);
 
   return (
-    <LiturgyContext.Provider value={{ 
-      liturgy, 
-      updateLiturgy, 
-      updateSection, 
-      toggleSection, 
-      resetLiturgy,
-      generateShareableLink,
-      reorderSections,
-      getSavedLiturgies,
-      saveLiturgy,
-      loadLiturgyById,
-      isLoading
-    }}>
+    <LiturgyContext.Provider
+      value={{
+        liturgy,
+        updateLiturgy,
+        updateSection,
+        toggleSection,
+        resetLiturgy,
+        generateShareableLink,
+        reorderSections,
+        getSavedLiturgies,
+        saveLiturgy,
+        loadLiturgyById,
+        isLoading,
+        syncStatus,
+        forceSyncToCloud,
+      }}
+    >
       {children}
     </LiturgyContext.Provider>
   );
 };
-
 // eslint-disable-next-line react-refresh/only-export-components
 export const useLiturgy = () => {
   const context = useContext(LiturgyContext);

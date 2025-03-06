@@ -3,10 +3,11 @@ import Header from '@/components/Header';
 import LiturgyForm from '@/components/LiturgyForm';
 import LiturgySectionEdit from '@/components/LiturgySectionEdit';
 import ShareModal from '@/components/ShareModal';
+import SyncStatus from '@/components/SyncStatus';
 import { Button } from '@/components/ui/button';
 import { useLiturgy } from '@/context/LiturgyContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Save } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const LiturgyEditor: React.FC = () => {
@@ -14,21 +15,8 @@ const LiturgyEditor: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleSave = () => {
-    // Already saved automatically via context
-    toast({
-      title: "Liturgia salva",
-      description: "Sua liturgia foi salva com sucesso.",
-    });
-  };
-
   const handlePreview = () => {
-    // Salva a liturgia atual explicitamente antes de visualizar
-    const savedLiturgies = JSON.parse(localStorage.getItem('savedLiturgies') || '{}');
-    savedLiturgies[liturgy.id] = liturgy;
-    localStorage.setItem('savedLiturgies', JSON.stringify(savedLiturgies));
-    
-    // Agora navegue para a visualização
+    // Navegue para a visualização - agora a liturgia já deveria estar sendo salva automaticamente
     navigate(`/view/${liturgy.id}`);
   };
 
@@ -78,10 +66,7 @@ const LiturgyEditor: React.FC = () => {
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">Informações do Culto</h2>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-1" />
-              Salvar
-            </Button>
+            <SyncStatus />
             <Button variant="outline" size="sm" onClick={handlePreview}>
               <Eye className="h-4 w-4 mr-1" />
               Visualizar

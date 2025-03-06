@@ -7,16 +7,15 @@ import Header from '@/components/Header';
 import { LiturgyType, useLiturgy } from '@/context/LiturgyContext';
 
 const Index: React.FC = () => {
-  const { liturgy, resetLiturgy, getSavedLiturgies, saveLiturgy } = useLiturgy();
+  const { liturgy, resetLiturgy, getSavedLiturgies } = useLiturgy();
   const [savedLiturgies, setSavedLiturgies] = React.useState<LiturgyType[]>([]);
 
   useEffect(() => {
     setSavedLiturgies(getSavedLiturgies());
   }, [getSavedLiturgies]);
 
-  useEffect(() => {
-    saveLiturgy();
-  }, [liturgy, saveLiturgy]);
+  // Removemos o useEffect que estava chamando saveLiturgy
+  // Isso evita o salvamento desnecessário ao carregar a página inicial
 
   const hasDraft = liturgy.preacher || liturgy.liturgist || liturgy.sections.some(
     section => section.bibleReading || section.prayer || section.songs || 

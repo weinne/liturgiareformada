@@ -9,6 +9,7 @@ import PrintLayout from '@/components/PrintLayout';
 import { formatDate } from '@/utils/liturgyUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
+import SyncStatus from '@/components/SyncStatus';
 
 const ViewLiturgy: React.FC = () => {
   const { liturgyId } = useParams<{ liturgyId: string }>();
@@ -135,6 +136,12 @@ const ViewLiturgy: React.FC = () => {
                 <span className="font-medium">{currentLiturgy.liturgist}</span>
               </div>
             </div>
+            
+            {!isLoading && currentLiturgy && 
+              <div className="mt-2 flex justify-center">
+                <SyncStatus className="text-xs" />
+              </div>
+            }
           </div>
           
           <div className="space-y-6 animate-fade-in delay-100">
