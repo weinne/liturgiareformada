@@ -158,7 +158,7 @@ const Index: React.FC = () => {
       
       <footer className="py-6 border-t text-center text-sm text-muted-foreground">
         <div className="container">
-          <p>Editor de Liturgias Reformadas © {new Date().getFullYear()}</p>
+          <p>Editor de Liturgias Reformadas © {new Date().getFullYear()} <a href="https://weinne.teo.br">Weinne Santos</a></p>
         </div>
       </footer>
     </div>
