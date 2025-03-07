@@ -65,6 +65,17 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
     );
   };
 
+  // Função para preservar quebras de linha
+  const formatTextWithLineBreaks = (text: string) => {
+    if (!text) return '';
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i !== text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   const renderSectionContent = () => {
     if (section.type === 'wordPreaching' && section.sermon) {
       return (
@@ -90,27 +101,23 @@ const LiturgySection: React.FC<LiturgySectionProps> = ({ section, printMode = fa
     return (
       <>
         {section.bibleReading && (
-          <div className="mb-4">
-            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Leitura Bíblica</Badge>
-            <div className={`text-sm ${printMode ? 'text-black' : ''}`}>
-              {formatBibleReference(section.bibleReading)}
-            </div>
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Leitura Bíblica:</h4>
+            <div className="text-sm whitespace-pre-line">{formatTextWithLineBreaks(section.bibleReading)}</div>
           </div>
         )}
         
         {section.prayer && (
-          <div className="mb-4">
-            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Oração</Badge>
-            <div className={`text-sm whitespace-pre-line ${printMode ? 'text-black' : ''}`}>{section.prayer}</div>
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Oração:</h4>
+            <div className="text-sm whitespace-pre-line">{formatTextWithLineBreaks(section.prayer)}</div>
           </div>
         )}
         
         {section.songs && (
-          <div className="mb-4">
-            <Badge variant="outline" className={`mb-2 ${printMode ? 'text-black border-black' : ''}`}>Cânticos</Badge>
-            <div className={`text-sm ${printMode ? 'text-black' : ''}`}>
-              {formatHymnReference(section.songs)}
-            </div>
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">Cânticos:</h4>
+            <div className="text-sm whitespace-pre-line">{formatTextWithLineBreaks(section.songs)}</div>
           </div>
         )}
       </>

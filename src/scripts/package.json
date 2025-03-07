@@ -1,0 +1,14 @@
+{
+  "name": "liturgiareformada-scripts",
+  "version": "1.0.0",
+  "description": "Scripts para processamento de dados da Liturgia Reformada",
+  "main": "reorganizeHymns.js",
+  "scripts": {
+    "reorganize": "node reorganizeHymns.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "liturgiareformada-scripts": "file:"
+  }
+}

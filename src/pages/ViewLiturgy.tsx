@@ -10,6 +10,7 @@ import { formatDate } from '@/utils/liturgyUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import SyncStatus from '@/components/SyncStatus';
+import { Printer, Share } from 'lucide-react';
 
 const ViewLiturgy: React.FC = () => {
   const { liturgyId } = useParams<{ liturgyId: string }>();
@@ -119,7 +120,11 @@ const ViewLiturgy: React.FC = () => {
   return (
     <>
       <div className="min-h-screen bg-secondary/40">
-        <Header showBackButton onShareClick={() => setIsShareModalOpen(true)} />
+        <Header 
+          showBackButton 
+          onShareClick={() => setIsShareModalOpen(true)} 
+          onPrintClick={handlePrint}
+        />
         
         <main className="container max-w-4xl py-24 px-4">
           <div className="text-center mb-8 animate-fade-in">
@@ -152,13 +157,22 @@ const ViewLiturgy: React.FC = () => {
               ))}
           </div>
           
-          <div className="flex justify-center mt-12">
+          <div className="flex justify-center mt-12 gap-3">
             <Button 
               variant="outline" 
               className="animate-fade-in delay-200"
               onClick={() => setIsShareModalOpen(true)}
             >
-              Compartilhar ou imprimir
+              <Share className="h-4 w-4 mr-2" />
+              <span>Compartilhar</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="animate-fade-in delay-200"
+              onClick={handlePrint}
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              <span>Imprimir</span>
             </Button>
           </div>
         </main>
@@ -167,8 +181,7 @@ const ViewLiturgy: React.FC = () => {
       <ShareModal
         open={isShareModalOpen}
         onOpenChange={setIsShareModalOpen}
-        onPrint={handlePrint}
-        liturgy={currentLiturgy} // Passa a liturgia atual como prop
+        liturgy={currentLiturgy} 
       />
       
       {isPrinting && (
@@ -201,7 +214,7 @@ const ViewLiturgy: React.FC = () => {
                     .section { margin-bottom: 16pt; page-break-inside: avoid; }
                     .section-title { font-weight: bold; margin-bottom: 6pt; }
                     .label { font-weight: bold; margin-top: 8pt; margin-bottom: 4pt; }
-                    .content { margin-bottom: 8pt; }
+                    .content { margin-bottom: 8pt; white-space: pre-line; }
                   }
                 </style>
               </head>

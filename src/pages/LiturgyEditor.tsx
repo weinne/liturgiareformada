@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from '@/components/Header';
 import LiturgyForm from '@/components/LiturgyForm';
 import LiturgySectionEdit from '@/components/LiturgySectionEdit';
@@ -7,18 +7,38 @@ import SyncStatus from '@/components/SyncStatus';
 import { Button } from '@/components/ui/button';
 import { useLiturgy } from '@/context/LiturgyContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Eye, Printer } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { formatDate } from '@/utils/liturgyUtils';
 
 const LiturgyEditor: React.FC = () => {
   const { liturgy, updateLiturgy } = useLiturgy();
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const printFrameRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
 
   const handlePreview = () => {
-    // Navegue para a visualização - agora a liturgia já deveria estar sendo salva automaticamente
     navigate(`/view/${liturgy.id}`);
   };
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+    setTimeout(() => {
+      if (printFrameRef.current?.contentWindow) {
+        printFrameRef.current.contentWindow.print();
+      }
+    }, 500);
+  };
+  
+  const handleAfterPrint = () => {
+    setIsPrinting(false);
+  };
+
+  React.useEffect(() => {
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, []);
 
   // Handle drag and drop for sections
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -60,7 +80,11 @@ const LiturgyEditor: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary/40 dark:bg-secondary/20 flex flex-col">
-      <Header showBackButton onShareClick={() => setShareModalOpen(true)} />
+      <Header 
+        showBackButton 
+        onShareClick={() => setShareModalOpen(true)} 
+        onPrintClick={handlePrint} 
+      />
       
       <main className="flex-1 container max-w-3xl py-24 px-4">
         <div className="mb-8 flex items-center justify-between">
@@ -69,7 +93,7 @@ const LiturgyEditor: React.FC = () => {
             <SyncStatus />
             <Button variant="outline" size="sm" onClick={handlePreview}>
               <Eye className="h-4 w-4 mr-1" />
-              Visualizar
+              <span>Visualizar</span>
             </Button>
           </div>
         </div>
@@ -99,9 +123,92 @@ const LiturgyEditor: React.FC = () => {
       <ShareModal 
         open={shareModalOpen} 
         onOpenChange={setShareModalOpen} 
-        onPrint={handlePreview}
         liturgy={liturgy}
       />
+
+      {isPrinting && (
+        <iframe
+          ref={printFrameRef}
+          style={{
+            position: 'absolute',
+            top: '-9999px',
+            width: '100%',
+            height: '100%',
+            border: 'none'
+          }}
+          title="print-frame"
+          srcDoc={`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>Liturgia - ${liturgy.date || 'Sem data'}</title>
+                <meta charset="utf-8" />
+                <style>
+                  @media print {
+                    body {
+                      font-family: system-ui, -apple-system, sans-serif;
+                      line-height: 1.5;
+                      color: black;
+                      background: white;
+                    }
+                    h1 { font-size: 24pt; margin-bottom: 12pt; }
+                    h2 { font-size: 16pt; margin-bottom: 8pt; }
+                    .section { margin-bottom: 16pt; page-break-inside: avoid; }
+                    .section-title { font-weight: bold; margin-bottom: 6pt; }
+                    .label { font-weight: bold; margin-top: 8pt; margin-bottom: 4pt; }
+                    .content { margin-bottom: 8pt; white-space: pre-line; }
+                  }
+                </style>
+              </head>
+              <body>
+                <div style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">
+                  <div style="text-align: center; margin-bottom: 40px;">
+                    <h1>Liturgia do Culto</h1>
+                    <p>${formatDate(liturgy.date)}</p>
+                    <div style="display: flex; justify-content: center; gap: 40px; margin-top: 16px;">
+                      <div>Pregador: <strong>${liturgy.preacher}</strong></div>
+                      <div>Liturgo: <strong>${liturgy.liturgist}</strong></div>
+                    </div>
+                  </div>
+                  
+                  ${liturgy.sections
+                    .filter(section => section.enabled)
+                    .map(section => `
+                      <div class="section">
+                        <h2 class="section-title">${section.title}</h2>
+                        
+                        ${section.bibleReading ? `
+                          <div class="label">Leitura Bíblica</div>
+                          <div class="content">${section.bibleReading}</div>
+                        ` : ''}
+                        
+                        ${section.prayer ? `
+                          <div class="label">Oração</div>
+                          <div class="content">${section.prayer}</div>
+                        ` : ''}
+                        
+                        ${section.songs ? `
+                          <div class="label">Cânticos</div>
+                          <div class="content">${section.songs}</div>
+                        ` : ''}
+                        
+                        ${section.sermon ? `
+                          <div class="label">Sermão</div>
+                          <div class="content"><strong>Tema:</strong> ${section.sermon.theme}</div>
+                          <div class="content">${section.sermon.text}</div>
+                          ${section.sermon.responseHymn ? `
+                            <div class="label">Cântico em Resposta</div>
+                            <div class="content">${section.sermon.responseHymn}</div>
+                          ` : ''}
+                        ` : ''}
+                      </div>
+                    `).join('')}
+                </div>
+              </body>
+            </html>
+          `}
+        />
+      )}
     </div>
   );
 };

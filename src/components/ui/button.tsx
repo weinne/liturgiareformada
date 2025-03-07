@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot as SlotPrimitive } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -52,5 +52,26 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }
 )
 Button.displayName = "Button"
+
+// Se estiver usando Slot ou qualquer outro componente que use React.Children.only
+// Ajuste a função para lidar melhor com múltiplos filhos:
+
+// Exemplo de implementação correta para o componente Slot:
+const Slot = React.forwardRef<
+  React.ElementRef<typeof SlotPrimitive>,
+  React.ComponentPropsWithoutRef<typeof SlotPrimitive>
+>(({ children, ...props }, ref) => {
+  // Se children for um array ou texto simples, envolva em um fragment ou span
+  const child = React.isValidElement(children) 
+    ? children 
+    : <span>{children}</span>;
+    
+  return (
+    <SlotPrimitive ref={ref} {...props}>
+      {child}
+    </SlotPrimitive>
+  );
+});
+Slot.displayName = "Slot";
 
 export { Button, buttonVariants }

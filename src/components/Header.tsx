@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, FileEdit, Share, BookOpen, Menu, Church, Home, Info } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronLeft, FileEdit, Share, BookOpen, Menu, Church, Home, Info, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
 import PWAInstallPrompt from './PWAInstallPrompt';
@@ -15,24 +15,30 @@ import {
 interface HeaderProps {
   onShareClick?: () => void;
   showBackButton?: boolean;
+  onPrintClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false }) => {
+const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false, onPrintClick }) => {
   const location = useLocation();
   const isEditPage = location.pathname.includes('/edit');
   const isViewPage = location.pathname.includes('/view');
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
   
   return (
     <header className="w-full border-b border-border bg-background bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm fixed top-0 z-10 transition-all duration-300 ease-spring">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-4">
           {showBackButton && (
-            <Button variant="ghost" size="sm" asChild className="mr-2">
-              <Link to="/">
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mr-2" 
+              onClick={() => navigate(-1)} 
+              title="Voltar"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span>Voltar</span>
             </Button>
           )}
           
@@ -75,15 +81,15 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild onClick={() => setMenuOpen(false)}>
-                  <Link to="/" className="flex items-center">
+                  <Link to="/" className="flex items-center w-full">
                     <Home className="mr-2 h-4 w-4" />
-                    Início
+                    <span>Início</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild onClick={() => setMenuOpen(false)}>
-                  <Link to="/about" className="flex items-center">
+                  <Link to="/about" className="flex items-center w-full">
                     <Info className="mr-2 h-4 w-4" />
-                    Sobre
+                    <span>Sobre</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -97,6 +103,12 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
               <Button onClick={onShareClick} variant="outline" size="sm" className="animate-fade-in">
                 <Share className="h-4 w-4 sm:mr-1" />
                 <span className="hidden sm:inline">Compartilhar</span>
+              </Button>
+            )}
+            
+            {(isEditPage || isViewPage) && onPrintClick && (
+              <Button variant="ghost" size="icon" onClick={onPrintClick} title="Imprimir">
+                <Printer className="h-4 w-4" />
               </Button>
             )}
             
