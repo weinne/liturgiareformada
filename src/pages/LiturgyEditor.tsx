@@ -4,10 +4,9 @@ import LiturgyForm from '@/components/LiturgyForm';
 import LiturgySectionEdit from '@/components/LiturgySectionEdit';
 import ShareModal from '@/components/ShareModal';
 import SyncStatus from '@/components/SyncStatus';
-import { Button } from '@/components/ui/button';
 import { useLiturgy } from '@/context/LiturgyContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/utils/liturgyUtils';
 
@@ -83,7 +82,8 @@ const LiturgyEditor: React.FC = () => {
       <Header 
         showBackButton 
         onShareClick={() => setShareModalOpen(true)} 
-        onPrintClick={handlePrint} 
+        onPrintClick={handlePrint}
+        onPreviewClick={handlePreview}
       />
       
       <main className="flex-1 container max-w-3xl py-24 px-4">
@@ -91,10 +91,6 @@ const LiturgyEditor: React.FC = () => {
           <h2 className="text-2xl font-bold tracking-tight">Informações do Culto</h2>
           <div className="flex items-center gap-2">
             <SyncStatus />
-            <Button variant="outline" size="sm" onClick={handlePreview}>
-              <Eye className="h-4 w-4 mr-1" />
-              <span>Visualizar</span>
-            </Button>
           </div>
         </div>
         
