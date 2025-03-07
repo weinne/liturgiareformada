@@ -38,7 +38,6 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false, o
               title="Voltar"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              <span>Voltar</span>
             </Button>
           )}
           
