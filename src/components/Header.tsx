@@ -31,7 +31,6 @@ const Header: React.FC<HeaderProps> = ({ onShareClick, showBackButton = false })
             <Button variant="ghost" size="sm" asChild className="mr-2">
               <Link to="/">
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Voltar
               </Link>
             </Button>
           )}
