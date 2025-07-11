@@ -6,10 +6,60 @@ import { toast } from '@/components/ui/use-toast';
 // Status de sincronização
 export type SyncStatus = 'synced' | 'syncing' | 'pending' | 'error';
 
+// Tipos de elementos litúrgicos
+export type ElementType = 
+  | 'bibleReading'     // Leitura Bíblica
+  | 'prayer'           // Oração
+  | 'hymn'             // Hino/Cântico
+  | 'lordsSupper'      // Ceia do Senhor
+  | 'baptism'          // Batismo
+  | 'baptismProfession' // Batismo e Profissão de Fé
+  | 'profession'       // Profissão de Fé
+  | 'preaching'        // Pregação da Palavra
+  | 'blessing'         // Bênção
+  | 'custom'           // Personalizado
+  | 'title';           // Título
+
 export type SectionType = {
   id: string;
-  type: string;
+  type: ElementType | string; // Keep string for backward compatibility
   title: string;
+  enabled: boolean;
+  
+  // Fields for different element types
+  // Bible Reading fields
+  bibleReference?: string;
+  readingName?: string;
+  bibleText?: string;
+  
+  // Prayer fields
+  prayerTitle?: string;
+  prayerPerson?: string;
+  prayerText?: string;
+  
+  // Hymn fields
+  hymnTitle?: string;
+  hymnCredits?: string;
+  hymnLyrics?: string;
+  
+  // Lord's Supper fields
+  institutionReading?: string;
+  consecrationPrayer?: string;
+  
+  // Baptism fields
+  baptismName?: string;
+  
+  // Preaching fields
+  preachingText?: string;
+  preachingTheme?: string;
+  
+  // Blessing fields
+  blessingText?: string;
+  
+  // Custom fields
+  customName?: string;
+  
+  // Legacy fields for backward compatibility
   bibleReading?: string;
   prayer?: string;
   songs?: string;
@@ -18,7 +68,6 @@ export type SectionType = {
     theme: string;
     responseHymn?: string;
   };
-  enabled: boolean;
 };
 
 export type LiturgyType = {
@@ -35,7 +84,10 @@ interface LiturgyContextType {
   updateLiturgy: (updatedLiturgy: Partial<LiturgyType>) => void;
   updateSection: (sectionId: string, updatedSection: Partial<SectionType>) => void;
   toggleSection: (sectionId: string) => void;
+  addSection: (elementType: ElementType) => void;
+  removeSection: (sectionId: string) => void;
   resetLiturgy: () => void;
+  loadReformedTemplate: () => void;
   generateShareableLink: () => Promise<string>;
   reorderSections: (sourceId: string, targetId: string) => void;
   getSavedLiturgies: () => LiturgyType[];
@@ -46,18 +98,25 @@ interface LiturgyContextType {
   forceSyncToCloud: (showNotification?: boolean) => Promise<boolean>;
 }
 
-const defaultSections: SectionType[] = [
-  { id: '1', type: 'worshipCall', title: '1. Chamada a Adoração', enabled: true },
-  { id: '2', type: 'lawReading', title: '2. Leitura da Lei', enabled: true },
-  { id: '3', type: 'forgiveness', title: '3. Anúncio do Perdão', enabled: true },
-  { id: '4', type: 'intercession', title: '4. Intercessão e Ações de Graça', enabled: true },
-  { id: '5', type: 'illumination', title: '5. Iluminação', enabled: true },
-  { id: '6', type: 'wordPreaching', title: '6. Pregação da Palavra', enabled: true },
-  { id: '7', type: 'lordsSupper', title: '7. Ceia do Senhor', enabled: false },
-  { id: '8', type: 'consecration', title: '8. Consagração', enabled: true },
-  { id: '9', type: 'sending', title: '9. Envio', enabled: true },
-  { id: '10', type: 'blessing', title: '10. Benção', enabled: true },
+// Reformed template sections
+const reformedTemplateSections: SectionType[] = [
+  { id: generateUniqueId(), type: 'bibleReading', title: 'Leitura Bíblica (Chamada à Adoração)', enabled: true, readingName: 'Chamada à Adoração' },
+  { id: generateUniqueId(), type: 'prayer', title: 'Oração de Invocação', enabled: true, prayerTitle: 'Oração de Invocação' },
+  { id: generateUniqueId(), type: 'hymn', title: 'Hino', enabled: true },
+  { id: generateUniqueId(), type: 'bibleReading', title: 'Leitura Bíblica (Leitura da Lei)', enabled: true, readingName: 'Leitura da Lei' },
+  { id: generateUniqueId(), type: 'prayer', title: 'Oração de Confissão', enabled: true, prayerTitle: 'Oração de Confissão' },
+  { id: generateUniqueId(), type: 'hymn', title: 'Hino', enabled: true },
+  { id: generateUniqueId(), type: 'bibleReading', title: 'Leitura Bíblica (Anúncio do Perdão)', enabled: true, readingName: 'Anúncio do Perdão' },
+  { id: generateUniqueId(), type: 'prayer', title: 'Oração de Intercessão', enabled: true, prayerTitle: 'Oração de Intercessão' },
+  { id: generateUniqueId(), type: 'hymn', title: 'Hino', enabled: true },
+  { id: generateUniqueId(), type: 'preaching', title: 'Pregação da Palavra', enabled: true },
+  { id: generateUniqueId(), type: 'lordsSupper', title: 'Ceia do Senhor', enabled: true },
+  { id: generateUniqueId(), type: 'prayer', title: 'Oração Final', enabled: true, prayerTitle: 'Oração Final' },
+  { id: generateUniqueId(), type: 'blessing', title: 'Bênção', enabled: true },
 ];
+
+// Empty default sections for new liturgy
+const defaultSections: SectionType[] = [];
 
 const defaultLiturgy: LiturgyType = {
   id: generateUniqueId(),
@@ -186,6 +245,94 @@ export const LiturgyProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     };
   }, [debouncedSaveToCloud, syncStatus]);
+
+  // Helper function to get title for element type
+  const getElementTitle = (elementType: ElementType): string => {
+    const titles = {
+      bibleReading: 'Leitura Bíblica',
+      prayer: 'Oração',
+      hymn: 'Hino/Cântico', 
+      lordsSupper: 'Ceia do Senhor',
+      baptism: 'Batismo',
+      baptismProfession: 'Batismo e Profissão de Fé',
+      profession: 'Profissão de Fé',
+      preaching: 'Pregação da Palavra',
+      blessing: 'Bênção',
+      custom: 'Personalizado',
+      title: 'Título'
+    };
+    return titles[elementType] || 'Elemento Litúrgico';
+  };
+
+  const addSection = useCallback((elementType: ElementType) => {
+    const newSection: SectionType = {
+      id: generateUniqueId(),
+      type: elementType,
+      title: getElementTitle(elementType),
+      enabled: true
+    };
+    
+    setLiturgy(prev => {
+      const newLiturgy = { 
+        ...prev, 
+        sections: [...prev.sections, newSection] 
+      };
+      localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
+      return newLiturgy;
+    });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
+  }, [debouncedSaveToCloud]);
+
+  const removeSection = useCallback((sectionId: string) => {
+    setLiturgy(prev => {
+      const updatedSections = prev.sections.filter(section => section.id !== sectionId);
+      const newLiturgy = { ...prev, sections: updatedSections };
+      localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
+      return newLiturgy;
+    });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
+  }, [debouncedSaveToCloud]);
+
+  const loadReformedTemplate = useCallback(() => {
+    setLiturgy(prev => {
+      const newLiturgy = { 
+        ...prev, 
+        sections: reformedTemplateSections.map(section => ({
+          ...section,
+          id: generateUniqueId() // Generate new IDs for template sections
+        }))
+      };
+      localStorage.setItem('currentLiturgy', JSON.stringify(newLiturgy));
+      
+      // Marca para sincronização
+      pendingSyncRef.current = true;
+      setSyncStatus('pending');
+      
+      return newLiturgy;
+    });
+    
+    // Iniciar sincronização com debounce
+    debouncedSaveToCloud();
+    
+    toast({
+      title: "Modelo carregado",
+      description: "O modelo reformado foi aplicado à liturgia."
+    });
+  }, [debouncedSaveToCloud]);
 
   const updateLiturgy = (updatedLiturgy: Partial<LiturgyType>) => {
     setLiturgy(prev => {
@@ -386,7 +533,10 @@ const loadLiturgyById = useCallback(async (id: string): Promise<LiturgyType | nu
         updateLiturgy,
         updateSection,
         toggleSection,
+        addSection,
+        removeSection,
         resetLiturgy,
+        loadReformedTemplate,
         generateShareableLink,
         reorderSections,
         getSavedLiturgies,
