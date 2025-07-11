@@ -1,17 +1,19 @@
 import React, { useState, useRef } from 'react';
 import Header from '@/components/Header';
 import LiturgyForm from '@/components/LiturgyForm';
-import LiturgySectionEdit from '@/components/LiturgySectionEdit';
+import LiturgicalElement from '@/components/LiturgicalElement';
+import AddElementButton from '@/components/AddElementButton';
 import ShareModal from '@/components/ShareModal';
 import SyncStatus from '@/components/SyncStatus';
+import { Button } from '@/components/ui/button';
 import { useLiturgy } from '@/context/LiturgyContext';
 import { useNavigate } from 'react-router-dom';
-import { Printer } from 'lucide-react';
+import { Printer, BookOpenCheck } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { formatDate } from '@/utils/liturgyUtils';
 
 const LiturgyEditor: React.FC = () => {
-  const { liturgy, updateLiturgy } = useLiturgy();
+  const { liturgy, updateLiturgy, loadReformedTemplate } = useLiturgy();
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const printFrameRef = useRef<HTMLIFrameElement>(null);
@@ -97,22 +99,53 @@ const LiturgyEditor: React.FC = () => {
         <LiturgyForm />
         
         <div className="mb-8 mt-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">
-            Momentos do Culto 
-            <span className="text-sm font-normal ml-2 text-muted-foreground">(arraste para reorganizar)</span>
-          </h2>
-          
-          <div className="space-y-6">
-            {liturgy.sections.map(section => (
-              <LiturgySectionEdit 
-                key={section.id} 
-                section={section} 
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              />
-            ))}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Elementos Litúrgicos
+              {liturgy.sections.length > 0 && (
+                <span className="text-sm font-normal ml-2 text-muted-foreground">(arraste para reorganizar)</span>
+              )}
+            </h2>
+            {liturgy.sections.length === 0 && (
+              <Button onClick={loadReformedTemplate} variant="outline">
+                <BookOpenCheck className="w-4 h-4 mr-2" />
+                Usar Modelo Reformado
+              </Button>
+            )}
           </div>
+          
+          {liturgy.sections.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-muted-foreground">Liturgia Vazia</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Comece adicionando elementos litúrgicos ou use o modelo reformado para uma liturgia pré-estruturada.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <AddElementButton />
+                  <Button onClick={loadReformedTemplate} variant="outline">
+                    <BookOpenCheck className="w-4 h-4 mr-2" />
+                    Usar Modelo Reformado
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {liturgy.sections.map(section => (
+                <LiturgicalElement 
+                  key={section.id} 
+                  section={section} 
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                />
+              ))}
+              <div className="pt-4">
+                <AddElementButton />
+              </div>
+            </div>
+          )}
         </div>
       </main>
       
