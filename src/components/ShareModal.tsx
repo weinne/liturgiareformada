@@ -28,7 +28,7 @@ interface ShareModalProps {
 const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, liturgy }) => {
   const [copied, setCopied] = useState(false);
   
-  const shareUrl = `${window.location.origin}/view/${liturgy.id}`;
+  const shareUrl = `${window.location.origin}/#/view/${liturgy.id}`;
 
   const handleCopy = async () => {
     try {
